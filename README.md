@@ -3,6 +3,7 @@
 
 # Summary
 This package contains type definitions for bluebird (https://github.com/petkaantonov/bluebird).
+Removed `catchReturn`, `catchThrow` and `suppressUnhandledRejections` as they were raising problems
 
 # Details
 Files were exported from https://www.github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/bluebird-global
