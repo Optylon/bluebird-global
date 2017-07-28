@@ -2,6 +2,7 @@
 // Project: https://github.com/petkaantonov/bluebird
 // Definitions by: d-ph <https://github.com/d-ph>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
 
 /*
  * 1. Why use `bluebird-global` instead of `bluebird`?
@@ -50,8 +51,8 @@ declare global {
      * Patch all instance method
      */
     interface Promise<T> {
-        all: typeof Bluebird.prototype.all;
-        any: typeof Bluebird.prototype.any;
+        all<U>(): Promise<U[]>;
+        any<U>(): Promise<U>;
         asCallback: typeof Bluebird.prototype.asCallback;
         bind: typeof Bluebird.prototype.bind;
         call: typeof Bluebird.prototype.call;
@@ -61,10 +62,10 @@ declare global {
         delay: typeof Bluebird.prototype.delay;
         disposer: typeof Bluebird.prototype.disposer;
         done: typeof Bluebird.prototype.done;
-        each: typeof Bluebird.prototype.each;
+        each<R, U>(iterator: (item: R, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<R[]>;
         error: typeof Bluebird.prototype.error;
         filter: typeof Bluebird.prototype.filter;
-        finally: typeof Bluebird.prototype.finally;
+        finally<R,U>(handler: () => U | PromiseLike<U>): Promise<R>;
         get: typeof Bluebird.prototype.get;
         isCancelled: typeof Bluebird.prototype.isCancelled;
         isFulfilled: typeof Bluebird.prototype.isFulfilled;
@@ -72,25 +73,47 @@ declare global {
         isRejected: typeof Bluebird.prototype.isRejected;
         isResolved: typeof Bluebird.prototype.isResolved;
         lastly: typeof Bluebird.prototype.lastly;
-        map: typeof Bluebird.prototype.map;
-        mapSeries: typeof Bluebird.prototype.mapSeries;
+        map<Q, U>(mapper: (item: Q, index: number, arrayLength: number) => U | PromiseLike<U>, options?: Bluebird.ConcurrencyOption): Promise<U[]>;
+        mapSeries<R, U>(iterator: (item: R, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<U[]>;
         nodeify: typeof Bluebird.prototype.nodeify;
-        props: typeof Bluebird.prototype.props;
+        props<K, V>(this: PromiseLike<Map<K, Bluebird.Thenable<V> | V>>): Promise<Map<K, V>>;
+        props<T>(this: PromiseLike<Bluebird.ResolvableProps<T>>): Promise<T>;
+
         race: typeof Bluebird.prototype.race;
         reason: typeof Bluebird.prototype.reason;
-        reduce: typeof Bluebird.prototype.reduce;
+        /**
+         * Reduce an array, or a promise of an array, which contains a promises (or a mix of promises and values) with the given `reducer` function with the signature `(total, current, index, arrayLength)` where `item` is the resolved value of a respective promise in the input array. If any promise in the input array is rejected the returned promise is rejected as well.
+         *
+         * If the reducer function returns a promise or a thenable, the result for the promise is awaited for before continuing with next iteration.
+         *
+         * *The original array is not modified. If no `intialValue` is given and the array doesn't contain at least 2 items, the callback will not be called and `undefined` is returned. If `initialValue` is given and the array doesn't have at least 1 item, `initialValue` is returned.*
+         */
+        // promise of array with promises of value
+        reduce<R, U>(values: PromiseLike<PromiseLike<R>[]>, reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+        // promise of array with values
+        reduce<R, U>(values: PromiseLike<R[]>, reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+        // array with promises of value
+        reduce<R, U>(values: PromiseLike<R>[], reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+        // array with values
+        reduce<R, U>(values: R[], reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
         reflect: typeof Bluebird.prototype.reflect;
         return: typeof Bluebird.prototype.return;
         some: typeof Bluebird.prototype.some;
         spread: typeof Bluebird.prototype.spread;
-        // suppressUnhandledRejections: typeof Bluebird.prototype.suppressUnhandledRejections;
-        tap: typeof Bluebird.prototype.tap;
+        suppressUnhandledRejections: typeof Bluebird.prototype.suppressUnhandledRejections;
+
+        tap<R,U>(onFulFill: (value: R) => PromiseLike<U>): Bluebird<R>;
+        tap<R,U>(onFulfill: (value: R) => U): Bluebird<R>;
         tapCatch: typeof Bluebird.prototype.tapCatch;
         // then: typeof Bluebird.prototype.then;
         thenReturn: typeof Bluebird.prototype.thenReturn;
         thenThrow: typeof Bluebird.prototype.thenThrow;
-        // catchReturn: typeof Bluebird.prototype.catchReturn;
-        // catchThrow: typeof Bluebird.prototype.catchThrow;
+        catchReturn: typeof Bluebird.prototype.catchReturn;
+        catchThrow: typeof Bluebird.prototype.catchThrow;
         throw: typeof Bluebird.prototype.throw;
         timeout: typeof Bluebird.prototype.timeout;
         toJSON: typeof Bluebird.prototype.toJSON;
@@ -117,19 +140,19 @@ declare global {
          *
          * @todo Duplication of code is never ideal. See whether there's a better way of achieving this.
          */
-        catch(predicate: (error: any) => boolean, onReject: (error: any) => T | Bluebird.Thenable<T> | void | Bluebird.Thenable<void>): Bluebird<T>;
-        catch<U>(predicate: (error: any) => boolean, onReject: (error: any) => U | Bluebird.Thenable<U>): Bluebird<U | T>;
-        catch<E extends Error>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => T | Bluebird.Thenable<T> | void | Bluebird.Thenable<void>): Bluebird<T>;
-        catch<E extends Error, U>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => U | Bluebird.Thenable<U>): Bluebird<U | T>;
-        catch(predicate: Object, onReject: (error: any) => T | Bluebird.Thenable<T> | void | Bluebird.Thenable<void>): Bluebird<T>;
-        catch<U>(predicate: Object, onReject: (error: any) => U | Bluebird.Thenable<U>): Bluebird<U | T>;
+        catch(predicate: (error: any) => boolean, onReject: (error: any) => T | PromiseLike<T> | void | PromiseLike<void>): Bluebird<T>;
+        catch<U>(predicate: (error: any) => boolean, onReject: (error: any) => U | PromiseLike<U>): Bluebird<U | T>;
+        catch<E extends Error>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => T | PromiseLike<T> | void | PromiseLike<void>): Bluebird<T>;
+        catch<E extends Error, U>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => U | PromiseLike<U>): Bluebird<U | T>;
+        catch(predicate: Object, onReject: (error: any) => T | PromiseLike<T> | void | PromiseLike<void>): Bluebird<T>;
+        catch<U>(predicate: Object, onReject: (error: any) => U | PromiseLike<U>): Bluebird<U | T>;
     }
 
     /*
      * Patch all static methods and the constructor
      */
     interface PromiseConstructor {
-        new <T>(callback: (resolve: (thenableOrResult?: T | Bluebird.Thenable<T>) => void, reject: (error?: any) => void, onCancel?: (callback: () => void) => void) => void): Promise<T>;
+        new <T>(callback: (resolve: (thenableOrResult?: T | PromiseLike<T>) => void, reject: (error?: any) => void, onCancel?: (callback: () => void) => void) => void): Promise<T>;
 
         // all: typeof Bluebird.all;
         any: typeof Bluebird.any;
