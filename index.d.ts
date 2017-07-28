@@ -53,20 +53,21 @@ declare global {
     interface Promise<T> {
         all<U>(): Promise<U[]>;
         any<U>(): Promise<U>;
-        asCallback: typeof Bluebird.prototype.asCallback;
-        bind: typeof Bluebird.prototype.bind;
-        call: typeof Bluebird.prototype.call;
+        asCallback(callback: (err: any, value?: T) => void, options?: Bluebird.SpreadOption): this;
+        asCallback(...sink: any[]): this;
+        bind(thisArg: any): Promise<T>;
+        call(propertyName: string, ...args: any[]): Promise<any>;
         cancel: typeof Bluebird.prototype.cancel;
         // catch: typeof Bluebird.prototype.catch;
         caught: typeof Bluebird.prototype.caught;
         delay: typeof Bluebird.prototype.delay;
         disposer: typeof Bluebird.prototype.disposer;
         done: typeof Bluebird.prototype.done;
-        each<R, U>(iterator: (item: R, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<R[]>;
+        each<T, U>(iterator: (item: T, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<T[]>;
         error: typeof Bluebird.prototype.error;
         filter: typeof Bluebird.prototype.filter;
         finally<R,U>(handler: () => U | PromiseLike<U>): Promise<R>;
-        get: typeof Bluebird.prototype.get;
+        get<U>(key: string | number): Promise<U>;
         isCancelled: typeof Bluebird.prototype.isCancelled;
         isFulfilled: typeof Bluebird.prototype.isFulfilled;
         isPending: typeof Bluebird.prototype.isPending;
@@ -74,7 +75,7 @@ declare global {
         isResolved: typeof Bluebird.prototype.isResolved;
         lastly: typeof Bluebird.prototype.lastly;
         map<Q, U>(mapper: (item: Q, index: number, arrayLength: number) => U | PromiseLike<U>, options?: Bluebird.ConcurrencyOption): Promise<U[]>;
-        mapSeries<R, U>(iterator: (item: R, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<U[]>;
+        mapSeries<T, U>(iterator: (item: T, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<U[]>;
         nodeify: typeof Bluebird.prototype.nodeify;
         props<K, V>(this: PromiseLike<Map<K, Bluebird.Thenable<V> | V>>): Promise<Map<K, V>>;
         props<T>(this: PromiseLike<Bluebird.ResolvableProps<T>>): Promise<T>;
@@ -89,16 +90,16 @@ declare global {
          * *The original array is not modified. If no `intialValue` is given and the array doesn't contain at least 2 items, the callback will not be called and `undefined` is returned. If `initialValue` is given and the array doesn't have at least 1 item, `initialValue` is returned.*
          */
         // promise of array with promises of value
-        reduce<R, U>(values: PromiseLike<PromiseLike<R>[]>, reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+        reduce<T, U>(this: PromiseLike<PromiseLike<T>[]>, reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
 
         // promise of array with values
-        reduce<R, U>(values: PromiseLike<R[]>, reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+        reduce<T, U>(this: PromiseLike<T[]>, reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
 
         // array with promises of value
-        reduce<R, U>(values: PromiseLike<R>[], reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+        reduce<T, U>(this: PromiseLike<T>[], reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
 
         // array with values
-        reduce<R, U>(values: R[], reducer: (total: U, current: R, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+        reduce<T, U>(this: T[], reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
 
         reflect: typeof Bluebird.prototype.reflect;
         return: typeof Bluebird.prototype.return;
@@ -106,8 +107,8 @@ declare global {
         spread: typeof Bluebird.prototype.spread;
         suppressUnhandledRejections: typeof Bluebird.prototype.suppressUnhandledRejections;
 
-        tap<R,U>(onFulFill: (value: R) => PromiseLike<U>): Bluebird<R>;
-        tap<R,U>(onFulfill: (value: R) => U): Bluebird<R>;
+        tap<U>(onFulFill: (value: T) => PromiseLike<U>): Promise<T>;
+        tap<U>(onFulfill: (value: T) => U): Promise<T>;
         tapCatch: typeof Bluebird.prototype.tapCatch;
         // then: typeof Bluebird.prototype.then;
         thenReturn: typeof Bluebird.prototype.thenReturn;
@@ -118,7 +119,7 @@ declare global {
         timeout: typeof Bluebird.prototype.timeout;
         toJSON: typeof Bluebird.prototype.toJSON;
         toString: typeof Bluebird.prototype.toString;
-        value: typeof Bluebird.prototype.value;
+        value(): T;
 
         /*
          * Copy&paste ::then and ::catch from lib.es2015.promise.d.ts, because Bluebird's typings are not
@@ -140,12 +141,12 @@ declare global {
          *
          * @todo Duplication of code is never ideal. See whether there's a better way of achieving this.
          */
-        catch(predicate: (error: any) => boolean, onReject: (error: any) => T | PromiseLike<T> | void | PromiseLike<void>): Bluebird<T>;
-        catch<U>(predicate: (error: any) => boolean, onReject: (error: any) => U | PromiseLike<U>): Bluebird<U | T>;
-        catch<E extends Error>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => T | PromiseLike<T> | void | PromiseLike<void>): Bluebird<T>;
-        catch<E extends Error, U>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => U | PromiseLike<U>): Bluebird<U | T>;
-        catch(predicate: Object, onReject: (error: any) => T | PromiseLike<T> | void | PromiseLike<void>): Bluebird<T>;
-        catch<U>(predicate: Object, onReject: (error: any) => U | PromiseLike<U>): Bluebird<U | T>;
+        catch(predicate: (error: any) => boolean, onReject: (error: any) => T | PromiseLike<T> | void | PromiseLike<void>): Promise<T>;
+        catch<U>(predicate: (error: any) => boolean, onReject: (error: any) => U | PromiseLike<U>): Promise<U | T>;
+        catch<E extends Error>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => T | PromiseLike<T> | void | PromiseLike<void>): Promise<T>;
+        catch<E extends Error, U>(ErrorClass: new (...args: any[]) => E, onReject: (error: E) => U | PromiseLike<U>): Promise<U | T>;
+        catch(predicate: Object, onReject: (error: any) => T | PromiseLike<T> | void | PromiseLike<void>): Promise<T>;
+        catch<U>(predicate: Object, onReject: (error: any) => U | PromiseLike<U>): Promise<U | T>;
     }
 
     /*
@@ -171,16 +172,27 @@ declare global {
         join: typeof Bluebird.join;
         longStackTraces: typeof Bluebird.longStackTraces;
         map: typeof Bluebird.map;
-        mapSeries: typeof Bluebird.mapSeries;
+        mapSeries<T, U>(iterator: (item: T, index: number, arrayLength: number) => U | PromiseLike<U>): Promise<U[]>;
         method: typeof Bluebird.method;
         onPossiblyUnhandledRejection: typeof Bluebird.onPossiblyUnhandledRejection;
         promisify: typeof Bluebird.promisify;
         promisifyAll: typeof Bluebird.promisifyAll;
         props: typeof Bluebird.props;
         // race: typeof Bluebird.race;
-        reduce: typeof Bluebird.reduce;
         // reject: typeof Bluebird.reject;
         // resolve: typeof Bluebird.resolve;
+        reduce<T, U>(values: PromiseLike<PromiseLike<T>[]>, reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+        // promise of array with values
+        reduce<T, U>(values: PromiseLike<T[]>, reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+        // array with promises of value
+        reduce<T, U>(values: PromiseLike<T>[], reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+        // array with values
+        reduce<T, U>(values: T[], reducer: (total: U, current: T, index: number, arrayLength: number) => U | PromiseLike<U>, initialValue?: U): Promise<U>;
+
+
         some: typeof Bluebird.some;
         try: typeof Bluebird.try;
         using: typeof Bluebird.using;
